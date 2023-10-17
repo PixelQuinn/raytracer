@@ -5,7 +5,7 @@
 #include <vector>
 #include "geometry.h"
 
-struct render() {
+struct Sphere() {
     Vec3f center;
     float radius;
 
@@ -23,7 +23,9 @@ struct render() {
         if (t0 < 0) return false;
         return true;
     }
-    }
+};
+
+
     const int width    = 1024;
     const int height   = 768;
     std::vector<Vec3f> framebuffer(width*height);
