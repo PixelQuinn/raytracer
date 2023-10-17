@@ -16,7 +16,7 @@ void render() {
         }
     }
 
-    std::ofstream ofs; // save the framebuffer to file
+    std::ofstream ofs(filename, std::ios::binary); // save the framebuffer to file
     ofs.open("./out.ppm");
     ofs << "P6\n" << width << " " << height << "\n255\n";
     for (size_t i = 0; i < height*width; ++i) {
