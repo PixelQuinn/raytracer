@@ -27,6 +27,7 @@ struct Sphere() {
     }
 };
 
+// Decides color of pixel, depeneding on if the ray intersects
 Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const Sphere &sphere) {
     float sphere_dist = std::numeric_limits<float>::max();
     if (!sphere.ray_intersect(orig, dir, sphere_dist)) {
@@ -42,9 +43,13 @@ void render(const Sphere &sphere) {
     const int fov      = M_PI/2.;
     std::vector<Vec3f> framebuffer(width*height);
 
+#pragma omp parallel for
     for (size_t j = 0; j<height; j++) {
         for (size_t i = 0; i<width; i++) {
-            framebuffer[i+j*width] = Vec3f(j/float(height),i/float(width), 0);
+            float x = (2 * (i + 0.5 / (float)width - 1) * tan(fov / 2.) * width / (float)height;
+            float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.);
+            Vec3f dir = Vec3f(x, y, -1).normalize();
+            framebuffer[i + j * width] = cast_ray(Vec3f(0, 0, 0), dir, sphere);
         }
     }
 
@@ -60,6 +65,8 @@ void render(const Sphere &sphere) {
 }
 
 int main() {
-    render();
+    Sphere, sphere(Vec3f(-3, 0, -16), 2);
+    render(sphere);
+
     return 0;
 }
