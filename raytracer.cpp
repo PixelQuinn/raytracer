@@ -5,12 +5,20 @@
 #include <vector>
 #include "geometry.h"
 
+
+struct Material {
+    Material(conset Vec3f &color) : diffuse_color(color) {}
+    Material() : diffuse_color() {}
+    Vec3f diffuse_color;
+};
+
 // user defined datatype for creating spheres
 struct Sphere() { 
     Vec3f center; //center of sphere
     float radius; //radius of sphere
+    Material material;
 
-    Sphere(const Vec3f &c, const float &r) : center(c), radius(r) {}
+    Sphere(const Vec3f &c, const float &r, const Material &m) : center(c), radius(r), material(m) {}
 
 //A method to find out if the ray intersect the sphere or not which will help us to know if our sphere is in our field of view or not
     bool ray_intersect(const Vec3f &orig, const Vec3f &dir, float &t0) const {
@@ -28,13 +36,26 @@ struct Sphere() {
 };
 
 // Decides color of pixel, depeneding on if the ray intersects
-Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const Sphere &sphere) {
-    float sphere_dist = std::numeric_limits<float>::max();
-    if (!sphere.ray_intersect(orig, dir, sphere_dist)) {
-        return Vec3f(0.2, 0.7, 0.8); // background color
+bool scene_intersect(consdt Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &spheres, Vec3f &hit, Vec3f &N, Material &material) {
+    float spheres_dist = std::numeric_limits<float>::max();
+    for (size_t i = 0; i < spheres.size(); i++) {
+        float dist_i;
+        if (spheres[i].ray_intersect(orig, dir, dist_i) && dist_i < sphere_dist) {
+            spheres_dist = dist_i;
+            hit = orig + dir * dist_i;
+            N = (hit - spheres[i].center).normalize();
+            material = spheres[i].material;
+        }
+    }
+    return spheres_dist < 1000;
     }
 
-    return Vec3f(0.4, 0.4, 0.3);
+Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &spheres) {
+    Vec3f point, N;
+    Material material;
+
+    if (!scene_intersect(orig, dir, spheres, point, N, material)) {
+        return Vec3f(0.4, 0.4, 0.3);
 }
 
 void render(const Sphere &sphere) {
@@ -49,7 +70,7 @@ void render(const Sphere &sphere) {
             float x = (2 * (i + 0.5 / (float)width - 1) * tan(fov / 2.) * width / (float)height;
             float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.);
             Vec3f dir = Vec3f(x, y, -1).normalize();
-            framebuffer[i + j * width] = cast_ray(Vec3f(0, 0, 0), dir, sphere);
+            framebuffer[i + j * width] = cast_ray(Vec3f(0, 0, 0), dir, spheres);
         }
     }
 
@@ -65,8 +86,16 @@ void render(const Sphere &sphere) {
 }
 
 int main() {
-    Sphere, sphere(Vec3f(-3, 0, -16), 2);
-    render(sphere);
+    Material    ivory(Vec3f(0.4, 0.4, 0.3));
+    Material red_rubber(Vec3f(0.3, 0.1, 0.1));
+
+    std::vector<Sphere> spheres;
+    spheres.push_back(Sphere(Vec3f(-3, 0, -16), 2, ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 2, red_rubber));
+    spheres.push_back(Sphere(Vec3f(1.5, -0.5, -18), 3, red_rubber));
+    spheres.push_back(Sphere(Vec3f(7, 5, -18), 4, ivory));
+
+    render(spheres);
 
     return 0;
 }
