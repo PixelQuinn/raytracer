@@ -5,6 +5,11 @@
 #include <vector>
 #include "geometry.h"
 
+struct Light {
+    Light(const Vec3f& p, const float& i) : position(p), intensity(i) {}
+    Vec3f position;
+    float intensity;
+};
 
 struct Material {
     Material(conset Vec3f &color) : diffuse_color(color) {}
@@ -50,15 +55,23 @@ bool scene_intersect(consdt Vec3f &orig, const Vec3f &dir, const std::vector<Sph
     return spheres_dist < 1000;
     }
 
-Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &spheres) {
+Vec3f cast_ray(const Vec3f& orig, const Vec3f& dir, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
     Vec3f point, N;
     Material material;
 
     if (!scene_intersect(orig, dir, spheres, point, N, material)) {
         return Vec3f(0.4, 0.4, 0.3);
+    }
+
+    float diffuse_light_intensity = 0;
+    for (size_t i = o; i < lights.size(); i++) {
+        Vec3f light_dir = (lights[i].position - point).normalize();
+        diffuse_light_intensity += lights[i].intensity * std::max(0.f, light_dir * N);
+    }
+    return material.diffuse_color * diffuse_light_intensity;
 }
 
-void render(const Sphere &sphere) {
+void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights) {
     const int width    = 1024;
     const int height   = 768;
     const int fov      = M_PI/2.;
@@ -70,7 +83,7 @@ void render(const Sphere &sphere) {
             float x = (2 * (i + 0.5 / (float)width - 1) * tan(fov / 2.) * width / (float)height;
             float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.);
             Vec3f dir = Vec3f(x, y, -1).normalize();
-            framebuffer[i + j * width] = cast_ray(Vec3f(0, 0, 0), dir, spheres);
+            framebuffer[i + j * width] = cast_ray(Vec3f(0, 0, 0), dir, spheres, lights);
         }
     }
 
@@ -95,7 +108,10 @@ int main() {
     spheres.push_back(Sphere(Vec3f(1.5, -0.5, -18), 3, red_rubber));
     spheres.push_back(Sphere(Vec3f(7, 5, -18), 4, ivory));
 
-    render(spheres);
+    std::vector<Light> lights;
+    lights.push_back(Light(Vec3f(-20, 20, 20), 1.5));
+
+    render(spheres, lights);
 
     return 0;
 }
