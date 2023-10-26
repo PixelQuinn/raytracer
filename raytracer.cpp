@@ -12,9 +12,9 @@ struct Light {
 };
 
 struct Material {
-    Material(const Vec2f &a, const Vec3f &color, const float &spec) : albedo(a), diffuse_color(color), specular_exponent(spec) {}
-    Material() : albedo(1,0), diffuse_color(), specular_exponent() {}
-    Vec2f albedo;
+    Material(const Vec3f &a, const Vec3f &color, const float &spec) : albedo(a), diffuse_color(color), specular_exponent(spec) {}
+    Material() : albedo(1,0,0), diffuse_color(), specular_exponent() {}
+    Vec3f albedo;
     Vec3f diffuse_color;
     float specular_exponent;
 };
@@ -61,11 +61,11 @@ bool scene_intersect(consdt Vec3f &orig, const Vec3f &dir, const std::vector<Sph
     return spheres_dist < 1000;
     }
 
-Vec3f cast_ray(const Vec3f& orig, const Vec3f& dir, const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
+Vec3f cast_ray(const Vec3f& orig, const Vec3f& dir, const std::vector<Sphere>& spheres, const std::vector<Light>& lights, size_t depth=0) {
     Vec3f point, N;
     Material material;
 
-    if (!scene_intersect(orig, dir, spheres, point, N, material)) {
+    if (depth>4 || !scene_intersect(orig, dir, spheres, point, N, material)) {
         return Vec3f(0.4, 0.4, 0.3);
     }
 
