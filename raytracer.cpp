@@ -42,6 +42,10 @@ struct Sphere() {
     }
 };
 
+Vec3f reflect(const Vec3f &I, const Vec3f &N) {
+    return I - N*2.f*(I*N);
+}
+
 // Decides color of pixel, depeneding on if the ray intersects
 bool scene_intersect(consdt Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &spheres, Vec3f &hit, Vec3f &N, Material &material) {
     float spheres_dist = std::numeric_limits<float>::max();
@@ -65,10 +69,12 @@ Vec3f cast_ray(const Vec3f& orig, const Vec3f& dir, const std::vector<Sphere>& s
         return Vec3f(0.4, 0.4, 0.3);
     }
 
-    float diffuse_light_intensity = 0;
+    float diffuse_light_intensity = 0, specular_light_intensity = 0;
     for (size_t i = o; i < lights.size(); i++) {
         Vec3f light_dir = (lights[i].position - point).normalize();
+
         diffuse_light_intensity += lights[i].intensity * std::max(0.f, light_dir * N);
+        specular_light_intensity += powf(std::max(0.f, -reflect(-light_dir, N)*dir), material.specular_exponent)*lights[i].intensity;
     }
     return material.diffuse_color * diffuse_light_intensity;
 }
